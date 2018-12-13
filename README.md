@@ -9,4 +9,4 @@ Instructions
 -A multi user VR scene is loaded with an avatar driven by FinalIK
 
 Notes:
-Set ur mic and speakers to the one you use before running the application for the voice chat to work
+Set your mic and speakers to the one you use before running the application for the voice chat to work
