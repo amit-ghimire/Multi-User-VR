@@ -1,0 +1,136 @@
+v1.16
+	PUNVoice:
+CHANGED: removed all RequestUserAuthorization calls: crashes iOS builds, useful only in WebPlayer which is not supported since Unity 5.4.0
+CHANGED: PhotonVoiceRecorder.updateAudioSource renamed to UpdateAudioSource and made public (call it when AudioSourceFactory has changed e.g.), it recreates local voice for any audio source (was Microphone only)
+CHANGED: PhotonVoiceCreated receiver parameter updated in DelayProcessor
+CHANGED: PhotonVoiceSettings.Encrypt option added to toggle encryption of all voice streams from settings
+CHANGED: PhotonVoiceSettings.WorkInOfflineMode option added to allow voice client to connect in PUN offline mode
+CHANGED: when connecting to self hosted server PUN's Nickname and UserId are used
+CHANGED: updated Standard Assets' CrossPlatformInput inside PhotonVoice to remove warnings from newer Unity versions
+CHANGED: updated PUN to 1.91v
+CHANGED: PhotonVoiceSpeaker routes audio data to IAudioOut instance instead of AudioStreamPlayer; AudioStreamPlayer implements IAudioOut
+ADDED: PS4AudioOut component that implements IAudioOut used in PS4 builds. 
+NOTE: Audio output on the PS4 is now routed through Sony's native audio output APIs instead of through Unity's audio output APIs, when headphones are connected. This change was necessary to be able to support Sony's requirement that Voice Chat audio output must go to the headphones (when such are connected) even when other audio output goes to the speakers (which is not currently supported by Unity's audio output APIs).
+	PhotonVoiceAPI:
+FIXED: VoiceClient.removePlayerVoices iterated local voices channels list instead of remote
+MINOR: not used 'encoder' parameter removed from VoiceClient.createLocalVoice (encoder passed implicitly in voiceFactory parameter if required)
+CHANGED: VoiceClient.RemoveLocalVoice made public
+FIXED: LocalVoiceFramed.PushDataBufferPool.Release always called with 'info' parameter to avoid reusing of buffers of wrong size during pool element size change with Init call (this happens for windows AudioIn native capturer e.g.) 
+CHANGED: LocalVoice.IsTransmitting set to true if sendFrame was called in PushData or service (for readers) calls instead of checking built-in threshold based voice detector status
+ADDED: AudioUtil::ForceToStereo()
+
+v1.15
+	PUNVoice:
+CHANGED: PUN updated to 1.90v
+FIXED: Photon Voice's "AutoConnect" and "AutoDisconnect" settings ignored when PUN's "OfflineMode" is enabled
+
+v1.14
+    PUNVoice:
+CHANGED: UWP build fixes
+CHANGED: the PS4 output implementation is now mixing the output of all PhotonVoiceSpeaker.cs instances and passing them to the same PS4 audio output port instead of opening a new port per instance because the Sony PS4 audio output APIs don't support more than 4 parallely opened voice output ports
+CHANGED: refactored the PhotonVoiceSpeaker cleanup code to get rid of code redundancies
+FIXED: Singleton pattern for PhotonVoiceNetwork and PhotonVoiceSettings
+CHANGED: PhotonVoiceRecorder passes IAudioSource along with LocalVoice to PhotonVoiceCreated message
+CHANGED: DelayProcessor supports both float and short audio buffers
+CHANGED: PUN updated to 1.89v
+CHANGED: LoadBalancingApi updated to 4.1.2.0v
+    PhotonVoiceAPI:
+MINOR: fixed a typo in a comment inside AudioStreamPlayer::Update()
+
+v1.13
+  PUNVoice:
+ADDED: platform plugins (AEC, native microphone input, iOS ForceToSpeaker)
+CHANGED: more control over PhotonVoiceRecorder source and frame type
+  PhotonVoiceAPI:
+FIXED: threading issue causing access violation in opus_egpb.dll
+
+v1.12
+CHANGED: PUN updated to 1.87
+CHANGED: LoadBalancingApi updated to 4.1.1.17
+
+v1.11
+CHANGED: PUN updated to 1.85
+ADDED: missing Windows Store Applications opus files
+FIXED: broken demo scenes
+ADDED: missing WebSockets PUN plugins folder
+REMOVED: extra unused AndroidManifest.xml file
+FIXED: duplicate DLLs for Windows Store Applications platform
+
+v1.10
+CHANGED: PUN updated to v1.84.1
+FIXED: correct versioning is resumed after the wrong previous version 1.91 which was meant to be 1.9.1.
+FIXED: Windows Store Apps target platform and Universal Windows Platform build is working again.
+FIXED: high CPU usage issue.
+FIXED: PhotonVoiceSettings singleton now allows inactive or non scene instances e.g. attached to prefabs.
+
+v1.91
+FIXED: issue with missing files by renaming compile condition ENABLE_VIDEO to PHOTON_VOICE_VIDEO_ENABLE.
+FIXED: issue in PhotonVoiceHandler due to Profiler namespace change in Unity 5.5+.
+UPDATED: CrossPlatformInput StandardAsset to remove warnings in latest Unity versions.
+
+v1.9
+  PUNVoice:
+CHANGED: PUN updated to v1.84
+ADDED: PhotonVoiceHandler to implements a fallback thread that keeps sending ACKs when in background (Android) or keeps service loop when loading scenes.
+CHANGED: AudioClipWrapper.cs, AudioStreamPlayer.cs, MicWrapper.cs moved from Assets/PUNVoice/Scripts folder to Assets/Plugins/PhotonVoiceApi/Platforms/Unity
+  PhotonVoiceAPI:
+CHANGED: Voice peer sends sudio packets in channel 1 to not interfere with user data being sent in channel 0 by default
+CHANGED: encoding and decoding moved to separate threads
+
+v1.8
+CHANGED: PUN updated to v1.79
+FIXED: when player left a room, VoiceClient.removePlayerVoices tried to remove player voices from wrong container
+FIXED: microphone release in unity apps
+FIXED: AudioStreamPlayer: previous buffer tail played back on stream resume 
+CHANGED: iOS library rebuilt with full bitcode (Archive menu used in xcode)
+
+v1.7
+  PUNVoice:
+CHANGED: PUN updated to v1.76
+BREAKING: Opus Delay replaced with Photon.Voice.FrameDuration in PhotonVoiceSettings
+(If non-default Delay was used, updating new FrameDuration setting required)
+CHANGED: AudioStreamPlayer skips empty frames w/o error
+ADDED: PhotonVoiceNetwork.Client FramesSent, FramesSentBytes, RoundTripTime, RoundTripTimeVariance properties (rtt calculated only if local voices echoed back)
+CHANGED: VoiceClient.UseLossCompensation property removed
+FIXED: voice now works on self hosted when PUN is using TCP, different ports per app
+FIXED: AudioStreamPlayer: assigning negative values to playSamplePos caused AudioSource position setting error
+FIXED: AudioStreamPlayer buffer size set precisely basing on frame size and delay values (+1 sec) or it could be too small for high delays
+FIXED: setting PhotonVoiceRecorder.Transmit to PhotonVoiceSettings.AutoTransmit moved to Start() from OnJoinedVoiceRoom() or it's skipped if PhotonVoiceRecorder created after joining a room
+CHANGED: PushToTalk demo now exposes change of audio group using binary group chat
+  VoiceClient (accessible via PhotonVoiceNetwork.Client):
+ADDED: LocalVoice FramesSent, FramesSentBytes 
+ADDED: VoiceClient FramesSent, FramesSentBytes, RoundTripTime, RoundTripTimeVariance properties (rtt calculated only if local voices echoed back)
+CHANGED: memory allocation and buffer copying optimizations
+CHANGED: loss compensation is always on (synchronization relies on it)
+BREAKING: VoiceClient.UseLossCompensation property removed
+
+v1.6
+CHANGED: updated to PUN 1.75
+FIXED: iOS IPv6 support
+
+v1.5
+CHANGED: updated to PUN 1.74
+FIXED: Crash of iOS application exported from Unity 5.3.6+ (opus library exposes only interface methods now)
+ADDED: Linux support (opus libraries built for Ubuntu Linux added)
+CHANGED: automatic PhotonVoiceNetwork singleton creation
+CHANGED: LoadBalancingClient and Photon.Voice actions used internally can be safely overridden by user
+CHANGED: better error handling when no microphone device found (no multiple errors)
+ADDED: Push-To-Talk (PTT) demo scene that exposes toggling voice transmission on demand (button or key binding)
+
+v1.4
+CHANGED: Updated to PUN v1.72
+ADDED: ability to switch microphone device while joined to voice room
+
+v1.3
+CHANGED: Updated to PUN v1.69
+FIXED: Universal Windows WSA/x64 folder name
+
+v1.2
+ADDED: Universal Windows platform support
+FIXED: iOS fat lib missing armv7 component
+FIXED: MacOS opus dll import in editor
+
+v1.1:
+FIXED: MacOS opus plugin lib at default location is accessible when running in editor and as a standalone app
+FIXED: manually created PhotonVoiceNetwork instance got destroyed on scene change leaving PUNVoice w/o singleton (now PhotonVoiceNetwork singleton is created independently of accidentally added in editor PhotonVoiceNetwork instances, non-singleton instances disabled because all methods return immediately)
+FIXED: voice != null checks in PhotonVoiceRecorder's Transmit and Detect properties
