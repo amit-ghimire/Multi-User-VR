@@ -1,6 +1,22 @@
+/************************************************************************************
+Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+
+Licensed under the Oculus Utilities SDK License Version 1.31 (the "License"); you may not use
+the Utilities SDK except in compliance with the License, which is provided at the time of installation
+or download, or which otherwise accompanies this software in either electronic or hard copy form.
+
+You may obtain a copy of the License at
+https://developer.oculus.com/licenses/utilities-1.31
+
+Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+************************************************************************************/
+
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 [CustomEditor(typeof(OVRManager))]
@@ -8,10 +24,57 @@ public class OVRManagerEditor : Editor
 {
 	override public void OnInspectorGUI()
 	{
+#if UNITY_ANDROID
+		EditorGUILayout.LabelField("Target Devices");
+		EditorGUI.indentLevel++;
+		OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
+		List<OVRProjectConfig.DeviceType> oldTargetDeviceTypes = projectConfig.targetDeviceTypes;
+		List<OVRProjectConfig.DeviceType> targetDeviceTypes = new List<OVRProjectConfig.DeviceType>(oldTargetDeviceTypes);
+		bool hasModified = false;
+		int newCount = Mathf.Max(0, EditorGUILayout.IntField("Size", targetDeviceTypes.Count));
+		while (newCount < targetDeviceTypes.Count)
+		{
+			targetDeviceTypes.RemoveAt(targetDeviceTypes.Count - 1);
+			hasModified = true;
+		}
+		while (newCount > targetDeviceTypes.Count)
+		{
+			targetDeviceTypes.Add(OVRProjectConfig.DeviceType.GearVrOrGo);
+			hasModified = true;
+		}
+		for (int i = 0; i < targetDeviceTypes.Count; i++)
+		{
+			var deviceType = (OVRProjectConfig.DeviceType)EditorGUILayout.EnumPopup(string.Format("Element {0}", i), targetDeviceTypes[i]);
+			if (deviceType != targetDeviceTypes[i])
+			{
+				targetDeviceTypes[i] = deviceType;
+				hasModified = true;
+			}
+		}
+		if (hasModified)
+		{
+			projectConfig.targetDeviceTypes = targetDeviceTypes;
+			OVRProjectConfig.CommitProjectConfig(projectConfig);
+		}
+		EditorGUI.indentLevel--;
+		EditorGUILayout.Space();
+#endif
+
 		DrawDefaultInspector();
 
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
 		OVRManager manager = (OVRManager)target;
+#endif
+
+#if UNITY_ANDROID
+		EditorGUILayout.Space();
+		EditorGUILayout.LabelField("Mixed Reality Capture for Quest (experimental)", EditorStyles.boldLabel);
+		EditorGUI.indentLevel++;
+		SetupMrcActivationModeField("ActivationMode", ref manager.mrcActivationMode);
+		EditorGUI.indentLevel--;
+#endif
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 		EditorGUILayout.Space();
 		EditorGUILayout.LabelField("Mixed Reality Capture", EditorStyles.boldLabel);
 		SetupBoolField("Show Properties", ref manager.expandMixedRealityCapturePropertySheet);
@@ -33,6 +96,15 @@ public class OVRManagerEditor : Editor
 			SetupBoolField("enableMixedReality", ref manager.enableMixedReality);
 			SetupCompositoinMethodField("compositionMethod", ref manager.compositionMethod);
 			SetupLayerMaskField("extraHiddenLayers", ref manager.extraHiddenLayers, layerMaskOptions);
+
+			if (manager.compositionMethod == OVRManager.CompositionMethod.External)
+			{
+				EditorGUILayout.Space();
+				EditorGUILayout.LabelField("External Composition", EditorStyles.boldLabel);
+				EditorGUI.indentLevel++;
+
+				SetupColorField("backdropColor", ref manager.externalCompositionBackdropColor);
+			}
 
 			if (manager.compositionMethod == OVRManager.CompositionMethod.Direct || manager.compositionMethod == OVRManager.CompositionMethod.Sandwich)
 			{
@@ -91,7 +163,7 @@ public class OVRManagerEditor : Editor
 #endif
 	}
 
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
 	void SetupBoolField(string name, ref bool member)
 	{
 		EditorGUI.BeginChangeCheck();
@@ -200,5 +272,17 @@ public class OVRManagerEditor : Editor
 			virtualGreenScreenType = value;
 		}
 	}
+
+	void SetupMrcActivationModeField(string name, ref OVRManager.MrcActivationMode mrcActivationMode)
+	{
+		EditorGUI.BeginChangeCheck();
+		OVRManager.MrcActivationMode value = (OVRManager.MrcActivationMode)EditorGUILayout.EnumPopup(name, mrcActivationMode);
+		if (EditorGUI.EndChangeCheck())
+		{
+			Undo.RecordObject(target, "Changed " + name);
+			mrcActivationMode = value;
+		}
+	}
+
 #endif
 }
