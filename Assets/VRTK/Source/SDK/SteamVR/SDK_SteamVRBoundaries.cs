@@ -1,6 +1,8 @@
 ﻿// SteamVR Boundaries|SDK_SteamVR|005
+// DISCLAIMER: the code changes herein (for compatability with SteamVR Plugin 2.2.x) were created by a third party (WildStyle69) outside of VRTK, and are unsupported. VRTK takes no responsibility for the usage of this code, nor will provide any official support via GitHub or Slack.
 namespace VRTK
 {
+    using Valve.VR;
 #if VRTK_DEFINE_SDK_STEAMVR
     using UnityEngine;
 #endif
@@ -24,7 +26,7 @@ namespace VRTK
         /// </summary>
         public override void InitBoundaries()
         {
-#if UNITY_5_6 && !VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER
+#if UNITY_5_6 && !VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER && !VRTK_DEFINE_STEAMVR_PLUGIN_2_0_1_OR_NEWER
             Transform headsetCamera = VRTK_DeviceFinder.HeadsetCamera();
             if (headsetCamera != null && headsetCamera.GetComponent<SteamVR_UpdatePoses>() == null)
             {
@@ -135,7 +137,7 @@ namespace VRTK
 
         protected virtual Vector3[] ProcessVertices(Vector3[] vertices)
         {
-#if VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER
+#if VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER || VRTK_DEFINE_STEAMVR_PLUGIN_2_0_1_OR_NEWER
             return vertices;
 #else
             //If there aren't enough vertices or the play area is calibrated then just return

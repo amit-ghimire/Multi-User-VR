@@ -1,0 +1,157 @@
+{
+   "alias_info" : {},
+   
+   "bindings" : {
+      "/actions/vrtk" : {
+         "chords" : [],
+         "haptics" : [
+            {
+               "output" : "/actions/vrtk/out/haptic",
+               "path" : "/user/hand/left/output/haptic"
+            },
+            {
+               "output" : "/actions/vrtk/out/haptic",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
+         "poses" : [
+            {
+               "output" : "/actions/vrtk/in/pose",
+               "path" : "/user/hand/left/pose/raw"
+            },
+            {
+               "output" : "/actions/vrtk/in/pose",
+               "path" : "/user/hand/right/pose/raw"
+            }
+         ],
+         "skeleton" : [],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/triggerbutton"
+                  },
+                  "pull" : {
+                     "output" : "/actions/vrtk/in/triggersqueeze"
+                  },
+                  "touch" : {
+                     "output" : "/actions/vrtk/in/triggertouch"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/triggerbutton"
+                  },
+                  "pull" : {
+                     "output" : "/actions/vrtk/in/triggersqueeze"
+                  },
+                  "touch" : {
+                     "output" : "/actions/vrtk/in/triggertouch"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/touchpadbutton"
+                  },
+                  "position" : {
+                     "output" : "/actions/vrtk/in/touchpadposition"
+                  },
+                  "touch" : {
+                     "output" : "/actions/vrtk/in/touchpadtouch"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/touchpadbutton"
+                  },
+                  "position" : {
+                     "output" : "/actions/vrtk/in/touchpadposition"
+                  },
+                  "touch" : {
+                     "output" : "/actions/vrtk/in/touchpadtouch"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/right/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/gripbutton"
+                  },
+                  "touch" : {
+                     "output" : "/actions/vrtk/in/griptouch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/gripbutton"
+                  },
+                  "touch" : {
+                     "output" : "/actions/vrtk/in/griptouch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/buttononeclick"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/application_menu"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vrtk/in/buttontwoclick"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/application_menu"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/vrtk/in/touchpadposition"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/vrtk/in/touchpadposition"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/joystick"
+            }
+         ]
+      }
+   },
+   "controller_type" : "holographic_controller",
+   "description" : "",
+   "name" : "Default bindings for Windows Mixed Reality Controllers",
+   "options" : {},
+   "simulated_actions" : []
+}

@@ -20,4 +20,8 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 0edd6826a3dfd2549bdd30a730afa9bf,
+      type: 2}
+    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: b1c6db5adb275554bb15752843f65302,
+      type: 2}

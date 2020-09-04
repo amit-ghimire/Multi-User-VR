@@ -1,4 +1,5 @@
 ﻿// SteamVR Headset|SDK_SteamVR|003
+// DISCLAIMER: the code changes herein (for compatability with SteamVR Plugin 2.2.x) were created by a third party (WildStyle69) outside of VRTK, and are unsupported. VRTK takes no responsibility for the usage of this code, nor will provide any official support via GitHub or Slack.
 namespace VRTK
 {
 #if VRTK_DEFINE_SDK_STEAMVR
@@ -19,6 +20,8 @@ namespace VRTK
 #endif
     {
 #if VRTK_DEFINE_SDK_STEAMVR
+        private SteamVR_Behaviour_Pose cachedHeadsetPose;
+
         /// <summary>
         /// The ProcessUpdate method enables an SDK to run logic for every Unity Update
         /// </summary>
@@ -44,15 +47,8 @@ namespace VRTK
             cachedHeadset = GetSDKManagerHeadset();
             if (cachedHeadset == null)
             {
-#if (UNITY_5_4_OR_NEWER)
-                SteamVR_Camera foundCamera = VRTK_SharedMethods.FindEvenInactiveComponent<SteamVR_Camera>(true);
-#else
-                SteamVR_GameView foundCamera = VRTK_SharedMethods.FindEvenInactiveComponent<SteamVR_GameView>(true);
-#endif
-                if (foundCamera != null)
-                {
-                    cachedHeadset = foundCamera.transform;
-                }
+                // Headset and camera are now on the same transform
+                cachedHeadset = GetHeadsetCamera();
             }
             return cachedHeadset;
         }
@@ -64,12 +60,24 @@ namespace VRTK
         public override Transform GetHeadsetCamera()
         {
             cachedHeadsetCamera = GetSDKManagerHeadset();
-            if (cachedHeadsetCamera == null)
+            if (cachedHeadsetCamera == null || cachedHeadsetPose == null)
             {
-                SteamVR_Camera foundCamera = VRTK_SharedMethods.FindEvenInactiveComponent<SteamVR_Camera>(true);
-                if (foundCamera != null)
+                SteamVR_PlayArea steamVRPlayArea = VRTK_SharedMethods.FindEvenInactiveComponent<SteamVR_PlayArea>(true);
+                if (steamVRPlayArea != null)
                 {
-                    cachedHeadsetCamera = foundCamera.transform;
+                    // Assuming there is only one camera for now
+                    Camera foundCamera = steamVRPlayArea.transform.GetComponentInChildren<Camera>();
+                    if (foundCamera != null)
+                    {
+                        // Cache the headset camera
+                        cachedHeadsetCamera = foundCamera.transform;
+
+                        // Cache the headset pose
+                        if (cachedHeadsetPose == null)
+                        {
+                            cachedHeadsetPose = cachedHeadsetCamera.transform.GetComponent<SteamVR_Behaviour_Pose>();
+                        }
+                    }
                 }
             }
             return cachedHeadsetCamera;
@@ -113,7 +121,11 @@ namespace VRTK
         /// <returns>A Vector3 containing the current velocity of the headset.</returns>
         public override Vector3 GetHeadsetVelocity()
         {
-            return SteamVR_Controller.Input((int)SteamVR_TrackedObject.EIndex.Hmd).velocity;
+            if (cachedHeadsetPose != null)
+            {
+                return cachedHeadsetPose.GetVelocity();
+            }
+            return Vector3.zero;
         }
 
         /// <summary>
@@ -122,7 +134,11 @@ namespace VRTK
         /// <returns>A Vector3 containing the current angular velocity of the headset.</returns>
         public override Vector3 GetHeadsetAngularVelocity()
         {
-            return SteamVR_Controller.Input((int)SteamVR_TrackedObject.EIndex.Hmd).angularVelocity;
+            if (cachedHeadsetPose != null)
+            {
+                return cachedHeadsetPose.GetAngularVelocity();
+            }
+            return Vector3.zero;
         }
 
         /// <summary>

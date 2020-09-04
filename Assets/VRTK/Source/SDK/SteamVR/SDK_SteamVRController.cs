@@ -1,4 +1,5 @@
 ﻿// SteamVR Controller|SDK_SteamVR|004
+// DISCLAIMER: the code changes herein (for compatability with SteamVR Plugin 2.2.x) were created by a third party (WildStyle69) outside of VRTK, and are unsupported. VRTK takes no responsibility for the usage of this code, nor will provide any official support via GitHub or Slack.
 namespace VRTK
 {
 #if VRTK_DEFINE_SDK_STEAMVR
@@ -7,7 +8,7 @@ namespace VRTK
     using System.Text;
     using Valve.VR;
     using System;
-#if !VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER
+#if !VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER && !VRTK_DEFINE_STEAMVR_PLUGIN_2_0_1_OR_NEWER
     using System;
     using System.Reflection;
 #endif
@@ -16,6 +17,7 @@ namespace VRTK
     /// <summary>
     /// The SteamVR Controller SDK script provides a bridge to SDK methods that deal with the input devices.
     /// </summary>
+    /// <remarks>This class has been refactored to support the new SteamVR Input System (SteamVR Plugin 2.0.x), as such it is no longer backward compatabile with older versions of SteamVR.</remarks>
     [SDK_Description(typeof(SDK_SteamVRSystem))]
     public class SDK_SteamVRController
 #if VRTK_DEFINE_SDK_STEAMVR
@@ -25,38 +27,11 @@ namespace VRTK
 #endif
     {
 #if VRTK_DEFINE_SDK_STEAMVR
-        protected SteamVR_TrackedObject cachedLeftTrackedObject;
-        protected SteamVR_TrackedObject cachedRightTrackedObject;
-        protected Dictionary<GameObject, SteamVR_TrackedObject> cachedTrackedObjectsByGameObject = new Dictionary<GameObject, SteamVR_TrackedObject>();
-        protected Dictionary<uint, SteamVR_TrackedObject> cachedTrackedObjectsByIndex = new Dictionary<uint, SteamVR_TrackedObject>();
-        protected Dictionary<EVRButtonId, bool> axisTouchStates = new Dictionary<EVRButtonId, bool>();
-        protected Dictionary<EVRButtonId, float> axisTouchFidelity = new Dictionary<EVRButtonId, float>() { { EVRButtonId.k_EButton_SteamVR_Touchpad, 0f }, { EVRButtonId.k_EButton_Axis2, 0.25f } };
+        protected SteamVR_Behaviour_Pose cachedLeftBehaviourPose;
+        protected SteamVR_Behaviour_Pose cachedRightBehaviourPose;
+        protected Dictionary<GameObject, SteamVR_Behaviour_Pose> cachedBehaviourPosesByGameObject = new Dictionary<GameObject, SteamVR_Behaviour_Pose>();
+        protected Dictionary<uint, SteamVR_Behaviour_Pose> cachedBehaviourPosesByIndex = new Dictionary<uint, SteamVR_Behaviour_Pose>();
         protected ushort maxHapticVibration = 3999;
-
-#if !VRTK_DEFINE_STEAMVR_PLUGIN_1_2_2_OR_NEWER
-        /// <summary>
-        /// This method is called just after unloading the VRTK_SDKSetup that's using this SDK.
-        /// </summary>
-        /// <param name="setup">The SDK Setup which is using this SDK.</param>
-        public override void OnAfterSetupUnload(VRTK_SDKSetup setup)
-        {
-            base.OnAfterSetupUnload(setup);
-
-            SteamVR_ControllerManager controllerManager = setup.actualLeftController.transform.parent.GetComponent<SteamVR_ControllerManager>();
-            FieldInfo connectedField = typeof(SteamVR_ControllerManager).GetField(
-                "connected",
-                BindingFlags.NonPublic | BindingFlags.Instance
-            );
-            if (connectedField == null)
-            {
-                return;
-            }
-
-            bool[] connected = (bool[])connectedField.GetValue(controllerManager);
-            Array.Clear(connected, 0, connected.Length);
-            connectedField.SetValue(controllerManager, connected);
-        }
-#endif
 
         /// <summary>
         /// The ProcessUpdate method enables an SDK to run logic for every Unity Update
@@ -100,13 +75,16 @@ namespace VRTK
                 checkIndex = (VRTK_ControllerReference.IsValid(rightHand) ? rightHand.index : leftHand.index);
             }
 
-            ControllerType returnType = ControllerType.Undefined;
+            ControllerType controllerType = ControllerType.Undefined;
             if (checkIndex < uint.MaxValue)
             {
                 string controllerModelNumber = GetModelNumber(checkIndex);
-                returnType = MatchControllerTypeByString(controllerModelNumber);
+                controllerType = MatchControllerTypeByString(controllerModelNumber);
             }
-            return returnType;
+
+            SetSteamVrInputSourceControllerType(controllerType);
+
+            return controllerType;
         }
 
         /// <summary>
@@ -174,8 +152,8 @@ namespace VRTK
         /// <returns>The index of the given controller.</returns>
         public override uint GetControllerIndex(GameObject controller)
         {
-            SteamVR_TrackedObject trackedObject = GetTrackedObject(controller);
-            return (trackedObject != null ? (uint)trackedObject.index : uint.MaxValue);
+            SteamVR_Behaviour_Pose behaviourPose = GetBehaviourPose(controller);
+            return (behaviourPose != null ? (uint)behaviourPose.GetDeviceIndex() : uint.MaxValue);
         }
 
         /// <summary>
@@ -186,27 +164,27 @@ namespace VRTK
         /// <returns>The GameObject of the controller</returns>
         public override GameObject GetControllerByIndex(uint index, bool actual = false)
         {
-            SetTrackedControllerCaches();
+            SetBehaviourPoseControllerCaches();
             if (index < uint.MaxValue)
             {
                 VRTK_SDKManager sdkManager = VRTK_SDKManager.instance;
                 if (sdkManager != null)
                 {
-                    if (cachedLeftTrackedObject != null && (uint)cachedLeftTrackedObject.index == index)
+                    if (cachedLeftBehaviourPose != null && (uint)cachedLeftBehaviourPose.GetDeviceIndex() == index)
                     {
                         return (actual ? sdkManager.loadedSetup.actualLeftController : sdkManager.scriptAliasLeftController);
                     }
 
-                    if (cachedRightTrackedObject != null && (uint)cachedRightTrackedObject.index == index)
+                    if (cachedRightBehaviourPose != null && (uint)cachedRightBehaviourPose.GetDeviceIndex() == index)
                     {
                         return (actual ? sdkManager.loadedSetup.actualRightController : sdkManager.scriptAliasRightController);
                     }
                 }
 
-                SteamVR_TrackedObject currentTrackedObjectByIndex = VRTK_SharedMethods.GetDictionaryValue(cachedTrackedObjectsByIndex, index);
-                if (currentTrackedObjectByIndex != null)
+                SteamVR_Behaviour_Pose currentBehaviourPoseByIndex = VRTK_SharedMethods.GetDictionaryValue(cachedBehaviourPosesByIndex, index);
+                if (currentBehaviourPoseByIndex != null)
                 {
-                    return currentTrackedObjectByIndex.gameObject;
+                    return currentBehaviourPoseByIndex.gameObject;
                 }
             }
 
@@ -220,10 +198,10 @@ namespace VRTK
         /// <returns>A Transform containing the origin of the controller.</returns>
         public override Transform GetControllerOrigin(VRTK_ControllerReference controllerReference)
         {
-            SteamVR_TrackedObject trackedObject = GetTrackedObject(controllerReference.actual);
-            if (trackedObject != null)
+            SteamVR_Behaviour_Pose behaviourPose = GetBehaviourPose(controllerReference.actual);
+            if (behaviourPose != null)
             {
-                return (trackedObject.origin != null ? trackedObject.origin : trackedObject.transform.parent);
+                return (behaviourPose.origin != null ? behaviourPose.origin : behaviourPose.transform.parent);
             }
 
             return null;
@@ -263,7 +241,7 @@ namespace VRTK
             GameObject controller = GetSDKManagerControllerLeftHand(actual);
             if (controller == null && actual)
             {
-                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<SteamVR_ControllerManager>("Controller (left)", true);
+                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<SteamVR_PlayArea>("Controller (left)", true);
             }
             return controller;
         }
@@ -278,7 +256,7 @@ namespace VRTK
             GameObject controller = GetSDKManagerControllerRightHand(actual);
             if (controller == null && actual)
             {
-                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<SteamVR_ControllerManager>("Controller (right)", true);
+                controller = VRTK_SharedMethods.FindEvenInactiveGameObject<SteamVR_PlayArea>("Controller (right)", true);
             }
             return controller;
         }
@@ -403,9 +381,11 @@ namespace VRTK
             uint index = VRTK_ControllerReference.GetRealIndex(controllerReference);
             if (index < OpenVR.k_unTrackedDeviceIndexInvalid)
             {
-                float convertedStrength = maxHapticVibration * strength;
-                SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-                device.TriggerHapticPulse((ushort)convertedStrength, EVRButtonId.k_EButton_Axis0);
+                var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+                if (controllerInputSource != null)
+                {
+                    controllerInputSource.TriggerHapticPulse(strength);
+                }
             }
         }
 
@@ -443,8 +423,22 @@ namespace VRTK
             {
                 return Vector3.zero;
             }
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-            return device.velocity;
+
+            var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+            if (controllerInputSource != null)
+            {
+                if (controllerInputSource.CurrentHandType == SteamVR_Input_Sources.LeftHand && cachedLeftBehaviourPose != null)
+                {
+                    return cachedLeftBehaviourPose.GetVelocity();
+                }
+
+                if (controllerInputSource.CurrentHandType == SteamVR_Input_Sources.RightHand && cachedRightBehaviourPose != null)
+                {
+                    return cachedRightBehaviourPose.GetVelocity();
+                }
+            }
+
+            return Vector3.zero;
         }
 
         /// <summary>
@@ -459,13 +453,28 @@ namespace VRTK
             {
                 return Vector3.zero;
             }
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-            return device.angularVelocity;
+
+            var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+            if (controllerInputSource != null)
+            {
+                if (controllerInputSource.CurrentHandType == SteamVR_Input_Sources.LeftHand && cachedLeftBehaviourPose != null)
+                {
+                    return cachedLeftBehaviourPose.GetAngularVelocity();
+                }
+
+                if (controllerInputSource.CurrentHandType == SteamVR_Input_Sources.RightHand && cachedRightBehaviourPose != null)
+                {
+                    return cachedRightBehaviourPose.GetAngularVelocity();
+                }
+            }
+
+            return Vector3.zero;
         }
 
         /// <summary>
         /// The IsTouchpadStatic method is used to determine if the touchpad is currently not being moved.
         /// </summary>
+        /// <param name="isTouched"></param>
         /// <param name="currentAxisValues"></param>
         /// <param name="previousAxisValues"></param>
         /// <param name="compareFidelity"></param>
@@ -489,25 +498,33 @@ namespace VRTK
                 return Vector2.zero;
             }
 
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-            switch (buttonType)
+            var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+            if (controllerInputSource != null)
             {
-                case ButtonTypes.Touchpad:
-                    return device.GetAxis();
-                case ButtonTypes.TouchpadTwo:
-                    return (VRTK_DeviceFinder.GetCurrentControllerType() == ControllerType.SteamVR_WindowsMRController ? device.GetAxis(EVRButtonId.k_EButton_Axis2) : Vector2.zero);
-                case ButtonTypes.Trigger:
-                    return device.GetAxis(EVRButtonId.k_EButton_SteamVR_Trigger);
-                case ButtonTypes.Grip:
-                    switch (GetCurrentControllerType())
-                    {
-                        case ControllerType.SteamVR_OculusTouch:
-                        case ControllerType.SteamVR_ValveKnuckles:
-                            return device.GetAxis(EVRButtonId.k_EButton_Axis2);
-                        default:
-                            return new Vector2((GetControllerButtonState(buttonType, ButtonPressTypes.Press, controllerReference) ? 1f : 0f), 0f);
-                    }
+                switch (buttonType)
+                {
+                    case ButtonTypes.Touchpad:
+                        return controllerInputSource.GetTouchPadAxis(buttonType);
+                    
+                    case ButtonTypes.TouchpadTwo:
+                        return controllerInputSource.GetTouchPadAxis(buttonType);
+                    
+                    case ButtonTypes.Trigger:
+                        return new Vector2(controllerInputSource.GetButtonSenseAxis(buttonType), 0f);
+                    
+                    case ButtonTypes.Grip:
+                        switch (GetCurrentControllerType())
+                        {
+                            case ControllerType.SteamVR_OculusTouch:
+                            case ControllerType.SteamVR_ValveKnuckles:
+                                return new Vector2(controllerInputSource.GetButtonSenseAxis(buttonType), 0f);
+    
+                            default:
+                                return new Vector2((GetControllerButtonState(buttonType, ButtonPressTypes.Press, controllerReference) ? 1f : 0f), 0f);
+                        }
+                }
             }
+
             return Vector2.zero;
         }
 
@@ -525,20 +542,28 @@ namespace VRTK
                 return 0f;
             }
 
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-            switch (buttonType)
+            var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+            if (controllerInputSource != null)
             {
-                case ButtonTypes.Trigger:
-                    return device.GetAxis(EVRButtonId.k_EButton_Axis3).x;
-                case ButtonTypes.Grip:
-                    return device.GetAxis(EVRButtonId.k_EButton_Axis2).x;
-                case ButtonTypes.MiddleFinger:
-                    return device.GetAxis(EVRButtonId.k_EButton_Axis3).y;
-                case ButtonTypes.RingFinger:
-                    return device.GetAxis(EVRButtonId.k_EButton_Axis4).x;
-                case ButtonTypes.PinkyFinger:
-                    return device.GetAxis(EVRButtonId.k_EButton_Axis4).y;
+                switch (buttonType)
+                {
+                    case ButtonTypes.Trigger:
+                        return controllerInputSource.GetButtonSenseAxis(buttonType);
+
+                    case ButtonTypes.Grip:
+                        return controllerInputSource.GetButtonSenseAxis(buttonType);
+
+                    case ButtonTypes.MiddleFinger:
+                        return controllerInputSource.GetFingerCurl(buttonType);
+
+                    case ButtonTypes.RingFinger:
+                        return controllerInputSource.GetFingerCurl(buttonType);
+
+                    case ButtonTypes.PinkyFinger:
+                        return controllerInputSource.GetFingerCurl(buttonType);
+                }
             }
+
             return 0f;
         }
 
@@ -555,9 +580,14 @@ namespace VRTK
             {
                 return 0f;
             }
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
 
-            return (buttonType == ButtonTypes.Trigger || buttonType == ButtonTypes.TriggerHairline ? device.hairTriggerDelta : 0f);
+            var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+            if (controllerInputSource != null)
+            {
+                return (buttonType == ButtonTypes.Trigger || buttonType == ButtonTypes.TriggerHairline ? controllerInputSource.GetAxisDelta(buttonType) : 0f);
+            }
+
+            return 0f;
         }
 
         /// <summary>
@@ -575,33 +605,45 @@ namespace VRTK
                 return false;
             }
 
-            switch (buttonType)
+            var controllerInputSource = controllerReference.actual.GetComponent<SDK_SteamVRInputSource>();
+            if (controllerInputSource != null)
             {
-                case ButtonTypes.Trigger:
-                    return IsButtonPressed(index, pressType, SteamVR_Controller.ButtonMask.Trigger);
-                case ButtonTypes.TriggerHairline:
-                    if (pressType == ButtonPressTypes.PressDown)
-                    {
-                        return SteamVR_Controller.Input((int)index).GetHairTriggerDown();
-                    }
-                    else if (pressType == ButtonPressTypes.PressUp)
-                    {
-                        return SteamVR_Controller.Input((int)index).GetHairTriggerUp();
-                    }
-                    break;
-                case ButtonTypes.Grip:
-                    return IsButtonPressed(index, pressType, SteamVR_Controller.ButtonMask.Grip);
-                case ButtonTypes.Touchpad:
-                    return IsButtonPressed(index, pressType, SteamVR_Controller.ButtonMask.Touchpad);
-                case ButtonTypes.ButtonOne:
-                    return IsButtonPressed(index, pressType, (1ul << (int)EVRButtonId.k_EButton_A));
-                case ButtonTypes.ButtonTwo:
-                    return IsButtonPressed(index, pressType, SteamVR_Controller.ButtonMask.ApplicationMenu);
-                case ButtonTypes.StartMenu:
-                    return IsButtonPressed(index, pressType, SteamVR_Controller.ButtonMask.System);
-                case ButtonTypes.TouchpadTwo:
-                    return (VRTK_DeviceFinder.GetCurrentControllerType() == ControllerType.SteamVR_WindowsMRController ? CheckAxisTouch(index, pressType, EVRButtonId.k_EButton_Axis2) : false);
+                switch (buttonType)
+                {
+                    case ButtonTypes.Trigger:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+
+                    case ButtonTypes.TriggerHairline:
+                        if (pressType == ButtonPressTypes.PressDown)
+                        {
+                            return controllerInputSource.GetHairTriggerDown();
+                        }
+                        else if (pressType == ButtonPressTypes.PressUp)
+                        {
+                            return controllerInputSource.GetHairTriggerUp();
+                        }
+                        break;
+
+                    case ButtonTypes.Grip:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+
+                    case ButtonTypes.Touchpad:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+
+                    case ButtonTypes.ButtonOne:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+
+                    case ButtonTypes.ButtonTwo:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+
+                    case ButtonTypes.StartMenu:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+                    
+                    case ButtonTypes.TouchpadTwo:
+                        return controllerInputSource.GetButtonState(buttonType, pressType);
+                }
             }
+
             return false;
         }
 
@@ -621,12 +663,12 @@ namespace VRTK
             SteamVR_Events.RenderModelLoaded.Listen(OnRenderModelLoaded);
 #endif
 
-            SetTrackedControllerCaches(true);
+            SetBehaviourPoseControllerCaches(true);
         }
 
         protected virtual void OnTrackedDeviceRoleChanged<T>(T ignoredArgument)
         {
-            SetTrackedControllerCaches(true);
+            SetBehaviourPoseControllerCaches(true);
         }
 
         protected virtual void OnRenderModelLoaded(SteamVR_RenderModel givenControllerRenderModel, bool successfullyLoaded)
@@ -648,41 +690,41 @@ namespace VRTK
             }
         }
 
-        protected virtual void SetTrackedControllerCaches(bool forceRefresh = false)
+        protected virtual void SetBehaviourPoseControllerCaches(bool forceRefresh = false)
         {
             if (forceRefresh)
             {
-                cachedLeftTrackedObject = null;
-                cachedRightTrackedObject = null;
-                cachedTrackedObjectsByGameObject.Clear();
-                cachedTrackedObjectsByIndex.Clear();
+                cachedLeftBehaviourPose = null;
+                cachedRightBehaviourPose = null;
+                cachedBehaviourPosesByGameObject.Clear();
+                cachedBehaviourPosesByIndex.Clear();
             }
 
             VRTK_SDKManager sdkManager = VRTK_SDKManager.instance;
             if (sdkManager != null)
             {
-                if (cachedLeftTrackedObject == null && sdkManager.loadedSetup.actualLeftController)
+                if (cachedLeftBehaviourPose == null && sdkManager.loadedSetup.actualLeftController)
                 {
-                    cachedLeftTrackedObject = sdkManager.loadedSetup.actualLeftController.GetComponent<SteamVR_TrackedObject>();
+                    cachedLeftBehaviourPose = sdkManager.loadedSetup.actualLeftController.GetComponent<SteamVR_Behaviour_Pose>();
                 }
-                if (cachedRightTrackedObject == null && sdkManager.loadedSetup.actualRightController)
+                if (cachedRightBehaviourPose == null && sdkManager.loadedSetup.actualRightController)
                 {
-                    cachedRightTrackedObject = sdkManager.loadedSetup.actualRightController.GetComponent<SteamVR_TrackedObject>();
+                    cachedRightBehaviourPose = sdkManager.loadedSetup.actualRightController.GetComponent<SteamVR_Behaviour_Pose>();
                 }
             }
         }
 
-        protected virtual SteamVR_TrackedObject GetTrackedObject(GameObject controller)
+        protected virtual SteamVR_Behaviour_Pose GetBehaviourPose(GameObject controller)
         {
-            SetTrackedControllerCaches();
+            SetBehaviourPoseControllerCaches();
 
             if (IsControllerLeftHand(controller))
             {
-                return cachedLeftTrackedObject;
+                return cachedLeftBehaviourPose;
             }
             else if (IsControllerRightHand(controller))
             {
-                return cachedRightTrackedObject;
+                return cachedRightBehaviourPose;
             }
 
             if (controller == null)
@@ -690,83 +732,22 @@ namespace VRTK
                 return null;
             }
 
-            SteamVR_TrackedObject currentTrackedObjectByGameObject = VRTK_SharedMethods.GetDictionaryValue(cachedTrackedObjectsByGameObject, controller);
+            SteamVR_Behaviour_Pose currentBehaviourPoseByGameObject = VRTK_SharedMethods.GetDictionaryValue(cachedBehaviourPosesByGameObject, controller);
 
-            if (currentTrackedObjectByGameObject != null)
+            if (currentBehaviourPoseByGameObject != null)
             {
-                return currentTrackedObjectByGameObject;
+                return currentBehaviourPoseByGameObject;
             }
             else
             {
-                SteamVR_TrackedObject trackedObject = controller.GetComponent<SteamVR_TrackedObject>();
-                if (trackedObject != null)
+                SteamVR_Behaviour_Pose behaviourPose = controller.GetComponent<SteamVR_Behaviour_Pose>();
+                if (behaviourPose != null)
                 {
-                    VRTK_SharedMethods.AddDictionaryValue(cachedTrackedObjectsByGameObject, controller, trackedObject, true);
-                    VRTK_SharedMethods.AddDictionaryValue(cachedTrackedObjectsByIndex, (uint)trackedObject.index, trackedObject, true);
+                    VRTK_SharedMethods.AddDictionaryValue(cachedBehaviourPosesByGameObject, controller, behaviourPose, true);
+                    VRTK_SharedMethods.AddDictionaryValue(cachedBehaviourPosesByIndex, (uint)behaviourPose.GetDeviceIndex(), behaviourPose, true);
                 }
-                return trackedObject;
+                return behaviourPose;
             }
-        }
-
-        protected virtual bool IsButtonPressed(uint index, ButtonPressTypes type, ulong button)
-        {
-            if (index >= OpenVR.k_unTrackedDeviceIndexInvalid)
-            {
-                return false;
-            }
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-
-            switch (type)
-            {
-                case ButtonPressTypes.Press:
-                    return device.GetPress(button);
-                case ButtonPressTypes.PressDown:
-                    return device.GetPressDown(button);
-                case ButtonPressTypes.PressUp:
-                    return device.GetPressUp(button);
-                case ButtonPressTypes.Touch:
-                    return device.GetTouch(button);
-                case ButtonPressTypes.TouchDown:
-                    return device.GetTouchDown(button);
-                case ButtonPressTypes.TouchUp:
-                    return device.GetTouchUp(button);
-            }
-
-            return false;
-        }
-
-        protected virtual bool CheckAxisTouch(uint index, ButtonPressTypes type, EVRButtonId axisId)
-        {
-            if (index >= OpenVR.k_unTrackedDeviceIndexInvalid)
-            {
-                return false;
-            }
-            SteamVR_Controller.Device device = SteamVR_Controller.Input((int)index);
-            Vector2 axisValue = device.GetAxis(axisId);
-
-            bool currentAxisPressState = VRTK_SharedMethods.GetDictionaryValue(axisTouchStates, axisId, false, true);
-            float axisFidelity = VRTK_SharedMethods.GetDictionaryValue(axisTouchFidelity, axisId);
-
-            switch (type)
-            {
-                case ButtonPressTypes.Touch:
-                    return (!VRTK_SharedMethods.Vector3ShallowCompare(axisValue, Vector2.zero, axisFidelity));
-                case ButtonPressTypes.TouchDown:
-                    if (!currentAxisPressState && !VRTK_SharedMethods.Vector3ShallowCompare(axisValue, Vector2.zero, axisFidelity))
-                    {
-                        VRTK_SharedMethods.AddDictionaryValue(axisTouchStates, axisId, true, true);
-                        return true;
-                    }
-                    return false;
-                case ButtonPressTypes.TouchUp:
-                    if (currentAxisPressState && VRTK_SharedMethods.Vector3ShallowCompare(axisValue, Vector2.zero, axisFidelity))
-                    {
-                        VRTK_SharedMethods.AddDictionaryValue(axisTouchStates, axisId, false, true);
-                        return true;
-                    }
-                    return false;
-            }
-            return false;
         }
 
         protected virtual string GetControllerGripPath(ControllerHand hand, string suffix, ControllerHand forceHand)
@@ -855,6 +836,8 @@ namespace VRTK
                 case "vive controller dvt":
                     return ControllerType.SteamVR_ViveWand;
                 case "knuckles ev1.3":
+                case "knuckles ev3.0 left":
+                case "knuckles ev3.0 right":
                     return ControllerType.SteamVR_ValveKnuckles;
                 case "oculus rift cv1 (right controller)":
                 case "oculus rift cv1 (left controller)":
@@ -891,6 +874,27 @@ namespace VRTK
         protected virtual string GetModelNumber(uint index)
         {
             return (SteamVR.instance != null ? SteamVR.instance.GetStringProperty(ETrackedDeviceProperty.Prop_ModelNumber_String, index) : "").ToLower();
+        }
+
+        protected virtual void SetSteamVrInputSourceControllerType(SDK_BaseController.ControllerType controllerType)
+        {
+            if (cachedLeftBehaviourPose != null)
+            {
+                var leftControllerInputSource = cachedLeftBehaviourPose.gameObject.GetComponent<SDK_SteamVRInputSource>();
+                if (leftControllerInputSource != null)
+                {
+                    leftControllerInputSource.CurrentControllerType = controllerType;
+                }
+            }
+
+            if (cachedRightBehaviourPose != null)
+            {
+                var rightControllerInputSource = cachedRightBehaviourPose.gameObject.GetComponent<SDK_SteamVRInputSource>();
+                if (rightControllerInputSource)
+                {
+                    rightControllerInputSource.CurrentControllerType = controllerType;
+                }
+            }
         }
 #endif
     }
