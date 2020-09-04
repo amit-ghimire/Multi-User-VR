@@ -222,7 +222,7 @@ public class SpeexDSP : MonoBehaviour
 
         // can't access the AudioSettings properties in InitAEC if it's called from not main thread
         var playChannelCount = new Dictionary<AudioSpeakerMode, int>() {
-            {AudioSpeakerMode.Raw, 0},
+           //{AudioSpeakerMode.Raw, 0},
             {AudioSpeakerMode.Mono, 1},
             {AudioSpeakerMode.Stereo, 2},
             {AudioSpeakerMode.Quad, 4},
