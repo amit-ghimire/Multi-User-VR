@@ -21,4 +21,4 @@ MonoBehaviour:
   poseUpdateMode: 8
   activateFirstActionSetOnStart: 1
   editorAppKey: application.generated.unity.togethervr.exe
-  autoEnableVR: 1
+  autoEnableVR: 0
