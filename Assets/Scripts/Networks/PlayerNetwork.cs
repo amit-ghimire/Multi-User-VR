@@ -38,7 +38,7 @@ public class PlayerNetwork : MonoBehaviour {
     #region private behaviours
     private void OnSceneFinishedLoading(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "office")
+        if (scene.name == "temple")
         {
             if (PhotonNetwork.isMasterClient)
             {

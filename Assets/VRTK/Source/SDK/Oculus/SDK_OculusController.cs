@@ -153,7 +153,7 @@ namespace VRTK
                 switch (element)
                 {
                     case ControllerElements.AttachPoint:
-                        return null;
+                        return "";
                     case ControllerElements.Trigger:
                         return path + "trigger" + suffix;
                     case ControllerElements.GripLeft:
@@ -174,7 +174,7 @@ namespace VRTK
                         return parent;
                 }
             }
-            return null;
+            return "";
         }
 
         /// <summary>
@@ -822,6 +822,7 @@ namespace VRTK
 
             switch (activeControllerType)
             {
+                case OVRInput.Controller.Gamepad | OVRInput.Controller.RTouch | OVRInput.Controller.LTouch:
                 case OVRInput.Controller.Touch:
                     return (index == 0 ? OVRInput.Controller.LTouch : (index == 1 ? OVRInput.Controller.RTouch : OVRInput.Controller.None));
                 case OVRInput.Controller.LTouch:
