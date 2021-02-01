@@ -8,7 +8,6 @@ public class PlayerNetwork : MonoBehaviour {
     public static PlayerNetwork Instance;
     public string PlayerName { get; private set; }
     public GameObject Dummy;
-    public GameObject AudioStreamer;
     public GameObject head;
     public GameObject leftHand;
     public GameObject rightHand;
@@ -85,14 +84,12 @@ public class PlayerNetwork : MonoBehaviour {
         if (dummyInstantiate)
         {
             PhotonNetwork.Instantiate(Dummy.name, HMDManager.Instance.head.transform.position, HMDManager.Instance.head.transform.rotation, 0);
-            //PhotonNetwork.Instantiate(AudioStreamer.name, Vector3.zero, Quaternion.identity, 0);
         }
         else
         {
             PhotonNetwork.Instantiate(head.name, HMDManager.Instance.head.transform.position, HMDManager.Instance.head.transform.rotation, 0);
             PhotonNetwork.Instantiate(leftHand.name, HMDManager.Instance.leftHand.transform.position, HMDManager.Instance.leftHand.transform.rotation, 0);
             PhotonNetwork.Instantiate(rightHand.name, HMDManager.Instance.rightHand.transform.position, HMDManager.Instance.leftHand.transform.rotation, 0);
-            //PhotonNetwork.Instantiate(AudioStreamer.name, Vector3.zero, Quaternion.identity, 0);
         }
     }
     #endregion

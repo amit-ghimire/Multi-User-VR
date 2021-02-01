@@ -4368,8 +4368,8 @@ GameObject:
   - component: {fileID: 114317843714201992}
   - component: {fileID: 82901385366353462}
   - component: {fileID: 114429448637152152}
-  - component: {fileID: 114123634839417258}
   - component: {fileID: 81101074686020200}
+  - component: {fileID: 6652620844659919114}
   m_Layer: 0
   m_Name: HeadIK
   m_TagString: Untagged
@@ -4619,7 +4619,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc001952a941c2743a3739a35bf9c162, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &114123634839417258
+--- !u!81 &81101074686020200
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1913263509385616}
+  m_Enabled: 1
+--- !u!114 &6652620844659919114
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4631,19 +4639,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b23b644f2525c1c4a9fd5b77d9505148, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Source: 1
+  Source: 0
   MicrophoneType: 0
   TypeConvert: 0
-  AudioClip: {fileID: 8300000, guid: 5b37f7a7fe0af5d4da2f3ff5bce26341, type: 3}
+  AudioClip: {fileID: 0}
   LoopAudioClip: 1
---- !u!81 &81101074686020200
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1913263509385616}
-  m_Enabled: 1
 --- !u!1 &1916590792466378
 GameObject:
   m_ObjectHideFlags: 0
