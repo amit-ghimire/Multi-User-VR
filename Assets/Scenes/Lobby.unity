@@ -171,7 +171,7 @@ MonoBehaviour:
   head: {fileID: 1163748082096156, guid: b9729e51c84e64f46886c80beefe29c9, type: 3}
   leftHand: {fileID: 1614656720693788, guid: 96c39565eddd3974889a26c2ddb316c0, type: 3}
   rightHand: {fileID: 1450274855319726, guid: cb2211615d470ad4d88b09e84d97b450, type: 3}
-  dummyInstantiate: 1
+  dummyInstantiate: 0
 --- !u!114 &184866780
 MonoBehaviour:
   m_ObjectHideFlags: 0

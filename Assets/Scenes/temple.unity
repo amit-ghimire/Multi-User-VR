@@ -15774,7 +15774,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4766680931068694, guid: f5841596f19dbed4eb47e19747808877, type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 23032433272671970, guid: f5841596f19dbed4eb47e19747808877,
         type: 3}
@@ -27694,7 +27694,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4469798564469620, guid: dad81de586753124fa8f74a1ae24861a, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dad81de586753124fa8f74a1ae24861a, type: 3}
@@ -43123,63 +43123,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1866967786}
   m_Mesh: {fileID: 4300000, guid: 027fc09176d01ef4185e276c82f4c4d7, type: 3}
---- !u!1 &1867025265
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1867025267}
-  - component: {fileID: 1867025266}
-  m_Layer: 0
-  m_Name: Voice
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1867025266
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1867025265}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c83e06d07b8f654981913996327bdf4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  WorkInOfflineMode: 0
-  AutoConnect: 1
-  AutoDisconnect: 0
-  AutoTransmit: 1
-  SamplingRate: 24000
-  FrameDuration: 20000
-  Bitrate: 30000
-  VoiceDetection: 0
-  VoiceDetectionThreshold: 0.01
-  PlayDelayMs: 200
-  MicrophoneType: 0
-  DebugLostPercent: 0
-  DebugInfo: 0
-  Encrypt: 0
---- !u!4 &1867025267
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1867025265}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 16.615341, y: 57.75055, z: 39.281055}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1867896303
 GameObject:
   m_ObjectHideFlags: 0
