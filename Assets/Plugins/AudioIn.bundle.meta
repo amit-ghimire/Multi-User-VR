@@ -1,15 +1,31 @@
 fileFormatVersion: 2
 guid: b479559c5868b98438eae3baef1c250b
 folderAsset: yes
-timeCreated: 1509984906
-licenseType: Store
 PluginImporter:
-  serializedVersion: 1
+  externalObjects: {}
+  serializedVersion: 2
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
   platformData:
-    Any:
+  - first:
+      Any: 
+    second:
+      enabled: 0
+      settings: {}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 1
+      settings:
+        DefaultValueInitialized: true
+  - first:
+      Standalone: OSXUniversal
+    second:
       enabled: 1
       settings: {}
   userData: 
