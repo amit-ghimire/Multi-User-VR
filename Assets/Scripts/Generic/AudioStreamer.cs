@@ -5,10 +5,11 @@ using UnityEngine;
 public class AudioStreamer : MonoBehaviour {
 
 	// Use this for initialization
-	void Start () {
-		
+	void Start()
+	{
+
+
 	}
-	
 	// Update is called once per frame
 	void Update () {
 		
