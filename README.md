@@ -1,5 +1,5 @@
 # Multi-User-VR
-A cross platform multi user VR scene using Unity and Photon networking with Unity.
+A multi user VR scene using Unity and Photon networking with Unity.
 
 Instructions
 -Go to Scenes->Lobby
