@@ -24965,7 +24965,7 @@ PrefabInstance:
     - target: {fileID: 114435583958457156, guid: f5841596f19dbed4eb47e19747808877,
         type: 3}
       propertyPath: autoManageScriptDefines
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114435583958457156, guid: f5841596f19dbed4eb47e19747808877,
         type: 3}
